@@ -3,3 +3,7 @@ node_js:
   - "6"
   - "5"
   - "4"
+script: npm run coverage
+addons:
+  code_climate:
+    repo_token: 5dd6c3f083fb011c65f6cfaa93d4c23cf597aaf076c2991021ca33c36c59175f
