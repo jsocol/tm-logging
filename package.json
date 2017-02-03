@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "test": "mocha",
-    "coverage": "nyc npm test"
+    "coverage": "nyc --reporter=lcov --reporter=text npm test"
   },
   "dependencies": {},
   "devDependencies": {
