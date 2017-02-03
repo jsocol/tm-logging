@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('expect.js');
+var expect = require('chai').expect;
 var sinon = require('sinon');
 var formatters = require('../lib/formatters');
 var handlers = require('../lib/handlers');
@@ -21,39 +21,39 @@ describe('Handler', function () {
     });
 
     it('should default to NOTSET level', function () {
-        expect(h.level).to.be(levels.NOTSET);
+        expect(h.level).to.equal(levels.NOTSET);
     });
 
     it('should accept a level argument', function () {
         var h = new handlers.Handler(levels.INFO);
-        expect(h.level).to.be(levels.INFO);
+        expect(h.level).to.equal(levels.INFO);
         h.setLevel(levels.WARNING);
-        expect(h.level).to.be(levels.WARNING);
+        expect(h.level).to.equal(levels.WARNING);
     });
 
     it('should not implement emit', function () {
-        expect(h.emit).to.throwException(/not implemented/i);
+        expect(h.emit).to.throw(/not implemented/i);
     });
 
     it('should emit when the record level is higher than the handler level', function () {
         h.emit = sinon.spy();
         h.setLevel(levels.INFO);
         h.handle({level: levels.WARNING});
-        expect(h.emit.callCount).to.be(1);
+        expect(h.emit.callCount).to.equal(1);
     });
 
     it('should emit when the record level matches the handler level', function () {
         h.emit = sinon.spy();
         h.setLevel(levels.INFO);
         h.handle({level: levels.INFO});
-        expect(h.emit.callCount).to.be(1);
+        expect(h.emit.callCount).to.equal(1);
     });
 
     it('should not emit when the record level is below the handler level', function () {
         h.emit = sinon.spy();
         h.setLevel(levels.ERROR);
         h.handle({level: levels.INFO});
-        expect(h.emit.callCount).to.be(0);
+        expect(h.emit.callCount).to.equal(0);
     });
 });
 
@@ -65,8 +65,8 @@ describe('StreamHandler', function () {
         var lr = new LogRecord('foo', levels.WARNING);
         lr.msg = 'hi there';
         sh.handle(lr);
-        expect(stream.write.callCount).to.be(1);
-        expect(stream.write.firstCall.args[0]).to.be('hi there\n');
+        expect(stream.write.callCount).to.equal(1);
+        expect(stream.write.firstCall.args[0]).to.equal('hi there\n');
     });
 });
 

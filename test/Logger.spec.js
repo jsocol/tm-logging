@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('expect.js');
+var expect = require('chai').expect;
 var sinon = require('sinon');
 var levels = require('../lib/levels');
 var Logger = require('../lib/Logger');
@@ -17,10 +17,10 @@ describe('Logger', function () {
         var h = mockHandler();
         l.addHandler(h);
         l.debug('hi');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
         var arg = h.handle.firstCall.args[0];
-        expect(arg.msg).to.be('hi');
-        expect(arg.level).to.be(levels.DEBUG);
+        expect(arg.msg).to.equal('hi');
+        expect(arg.level).to.equal(levels.DEBUG);
     });
 
     it('should allow multiple handlers', function () {
@@ -30,14 +30,14 @@ describe('Logger', function () {
         l.addHandler(h);
         l.addHandler(g);
         l.info('hi');
-        expect(h.handle.callCount).to.be(1);
-        expect(g.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
+        expect(g.handle.callCount).to.equal(1);
         var hArg = h.handle.firstCall.args[0];
         var gArg = g.handle.firstCall.args[0];
-        expect(gArg.msg).to.be('hi');
-        expect(gArg.level).to.be(levels.INFO);
-        expect(hArg.msg).to.be('hi');
-        expect(hArg.level).to.be(levels.INFO);
+        expect(gArg.msg).to.equal('hi');
+        expect(gArg.level).to.equal(levels.INFO);
+        expect(hArg.msg).to.equal('hi');
+        expect(hArg.level).to.equal(levels.INFO);
     });
 
     it('should propagate to parent handlers', function () {
@@ -48,12 +48,12 @@ describe('Logger', function () {
         var ch = mockHandler();
         child.addHandler(ch);
         child.warning('oh no');
-        expect(ph.handle.callCount).to.be(1);
-        expect(ch.handle.callCount).to.be(1);
+        expect(ph.handle.callCount).to.equal(1);
+        expect(ch.handle.callCount).to.equal(1);
         var pArg = ph.handle.firstCall.args[0];
         var cArg = ch.handle.firstCall.args[0];
-        expect(pArg.name).to.be('parent.child');
-        expect(cArg.name).to.be('parent.child');
+        expect(pArg.name).to.equal('parent.child');
+        expect(cArg.name).to.equal('parent.child');
     });
 
     it('should skip handling below-level records', function () {
@@ -62,7 +62,7 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.debug('foo');
-        expect(h.handle.callCount).to.be(0);
+        expect(h.handle.callCount).to.equal(0);
     });
 
     it('should handle at-level records', function () {
@@ -71,7 +71,7 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.warning('foo');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
     });
 
     it('should propagate too-low records', function () {
@@ -82,8 +82,8 @@ describe('Logger', function () {
         var ch = mockHandler();
         child.addHandler(ch);
         child.info('bar');
-        expect(ph.handle.callCount).to.be(1);
-        expect(ch.handle.callCount).to.be(0);
+        expect(ph.handle.callCount).to.equal(1);
+        expect(ch.handle.callCount).to.equal(0);
     });
 
     it('should fall back if context cannot be found', function () {
@@ -93,12 +93,12 @@ describe('Logger', function () {
         var exc = new Error();
         exc.stack = '';
         l.exception(exc, 'Foo');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.func).to.be('');
-        expect(record.pathname).to.be('');
-        expect(record.lineno).to.be('');
+        expect(record.func).to.equal('');
+        expect(record.pathname).to.equal('');
+        expect(record.lineno).to.equal('');
     });
 
     it('should ignore unparseable frames', function () {
@@ -108,7 +108,7 @@ describe('Logger', function () {
         var exc = new Error();
         exc.stack = 'nothinghere\norhere\n' + exc.stack;
         l.exception(exc, 'Foo');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
     });
@@ -119,10 +119,10 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.debug('must die');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.level).to.be(levels.DEBUG);
+        expect(record.level).to.equal(levels.DEBUG);
     });
 
     it('should have an info method', function () {
@@ -131,10 +131,10 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.info('must die');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.level).to.be(levels.INFO);
+        expect(record.level).to.equal(levels.INFO);
     });
 
     it('should have an warn/warning method', function () {
@@ -144,13 +144,13 @@ describe('Logger', function () {
 
         l.warn('must die');
         l.warning('will die');
-        expect(h.handle.callCount).to.be(2);
+        expect(h.handle.callCount).to.equal(2);
 
         var record1 = h.handle.firstCall.args[0];
-        expect(record1.level).to.be(levels.WARNING);
+        expect(record1.level).to.equal(levels.WARNING);
 
         var record2 = h.handle.secondCall.args[0];
-        expect(record2.level).to.be(levels.WARNING);
+        expect(record2.level).to.equal(levels.WARNING);
     });
 
     it('should have an error method', function () {
@@ -159,10 +159,10 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.error('must die');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.level).to.be(levels.ERROR);
+        expect(record.level).to.equal(levels.ERROR);
     });
 
     it('should have an exception method', function () {
@@ -172,11 +172,11 @@ describe('Logger', function () {
         var exc = new Error();
 
         l.exception(exc, 'must die');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.level).to.be(levels.ERROR);
-        expect(record.exc).to.be(exc);
+        expect(record.level).to.equal(levels.ERROR);
+        expect(record.exc).to.equal(exc);
     });
 
     it('should exit on fatal error', function () {
@@ -187,11 +187,11 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.fatal('must die');
-        expect(h.handle.callCount).to.be(1);
-        expect(stub.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
+        expect(stub.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.level).to.be(levels.ERROR);
+        expect(record.level).to.equal(levels.ERROR);
         stub.restore();
     });
 
@@ -201,9 +201,9 @@ describe('Logger', function () {
         l.addHandler(h);
 
         l.log(levels.WARN, 'foo');
-        expect(h.handle.callCount).to.be(1);
+        expect(h.handle.callCount).to.equal(1);
 
         var record = h.handle.firstCall.args[0];
-        expect(record.level).to.be(levels.WARN);
+        expect(record.level).to.equal(levels.WARN);
     });
 });
