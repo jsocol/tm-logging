@@ -1,5 +1,7 @@
 # TodaysMeet  Logging
 
+[![Build Status](https://travis-ci.org/jsocol/tm-logging.svg?branch=master)](https://travis-ci.org/jsocol/tm-logging)
+
 Roughly a port of Python's logging lib (itself a port of Log4j) for
 node.
 
