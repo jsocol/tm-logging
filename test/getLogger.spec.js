@@ -3,8 +3,8 @@ const logging = require('../');
 
 describe('getLogger', function () {
     it('should return a logger', function () {
-        const l = logging.getLogger();
-        expect(l).to.be.an.instanceof(logging.Logger);
+        const logger = logging.getLogger();
+        expect(logger).to.be.an.instanceof(logging.Logger);
     });
 
     it('should return the same root logger', function () {

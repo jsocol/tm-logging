@@ -7,7 +7,7 @@ const Logger = require('./Logger');
 const LogRecord = require('./LogRecord');
 
 
-const loggerCache = {};
+process.__loggerCache = process.__loggerCache || {};
 
 
 function getLogger(name, level, propagate) {
@@ -15,8 +15,8 @@ function getLogger(name, level, propagate) {
         name = 'root';
     }
 
-    if (loggerCache[name] instanceof Logger) {
-        return loggerCache[name];
+    if (process.__loggerCache[name] instanceof Logger) {
+        return process.__loggerCache[name];
     }
 
     let parent = null;
@@ -29,8 +29,8 @@ function getLogger(name, level, propagate) {
         }
     }
 
-    loggerCache[name] = new Logger(name, level, parent, propagate);
-    return loggerCache[name];
+    process.__loggerCache[name] = new Logger(name, level, parent, propagate);
+    return process.__loggerCache[name];
 }
 
 
@@ -54,7 +54,6 @@ module.exports = {
 
     Logger,
     LogRecord,
-
     getLogger,
 
     debug: _rootLogger.debug.bind(_rootLogger),
@@ -65,5 +64,6 @@ module.exports = {
     fatal: _rootLogger.fatal.bind(_rootLogger),
 
     setLevel: _rootLogger.setLevel.bind(_rootLogger),
-    addHandler: _rootLogger.addHandler.bind(_rootLogger)
+    addHandler: _rootLogger.addHandler.bind(_rootLogger),
+    removeHandler: _rootLogger.removeHandler.bind(_rootLogger)
 };
