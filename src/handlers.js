@@ -4,86 +4,99 @@ const formatters = require('./formatters');
 const levels = require('./levels');
 
 
-function Handler(level) {
-    this.setLevel(level);
-    this.setFormatter(formatters._defaultFormatter);
-}
-
-
-Handler.prototype.setFormatter = function Handler_setFormatter(formatter) {
-    this.formatter = formatter;
-};
-
-
-Handler.prototype.format = function Handler_format(record) {
-    return this.formatter.format(record);
-};
-
-
-Handler.prototype.setLevel = function Handler_setLevel(level) {
-    this.level = !!level ? level : levels.NOTSET;
-};
-
-
-Handler.prototype.handle = function Handler_handle(record) {
-    if (record.level >= this.level) {
-        this.emit(record);
+class Handler {
+    constructor(level) {
+        this.setLevel(level);
+        this.setFormatter(formatters._defaultFormatter);
     }
-};
 
-
-Handler.prototype.emit = function Handler_emit(record) {
-    throw new Error('Not Implemented!');
-};
-
-
-function NullHandler(level) {
-    Handler.call(this, level);
-}
-
-
-util.inherits(NullHandler, Handler);
-
-
-NullHandler.prototype.emit = function NullHandler_emit(record) {
-    /* Do nothing. */
-};
-
-
-function StreamHandler(level, stream) {
-    if (!stream) {
-        stream = process.stderr;
+    setFormatter(formatter) {
+        this.formatter = formatter;
     }
-    this.stream = stream;
-    Handler.call(this, level);
+
+    format(record) {
+        return this.formatter.format(record);
+    }
+
+    get level() {
+        return this._level;
+    }
+
+    set level(level) {
+        this.setLevel(level);
+    }
+
+    setLevel(level) {
+        this._level = levels.checkLevel(level);
+    }
+
+    isEnabledFor(level) {
+        return level >= this.level;
+    }
+
+    handle(record) {
+        if (this.isEnabledFor(record.level)) {
+            this.emit(record);
+        }
+    }
+
+    emit(record) {
+        throw new Error('Not Implemented!');
+    }
 }
 
 
-util.inherits(StreamHandler, Handler);
-
-
-StreamHandler.prototype.emit = function StreamHandler_emit(record) {
-    this.stream.write(this.format(record) + '\n');
-};
-
-
-function FileHandler(level, path) {
-    this.path = path;
-    stream = fs.createWriteStream(path, {'flags': 'a+'});
-    StreamHandler.call(this, level, stream);
+class NullHandler extends Handler {
+    emit() {
+        // Bye, bye, bye
+    }
 }
 
 
-util.inherits(FileHandler, StreamHandler);
+class StreamHandler extends Handler {
+    constructor(level, stream = process.stderr) {
+        if (typeof level !== 'number' && level) {
+            stream = level;
+            level = levels.NOTSET;
+        }
+        super(level);
+        this.stream = stream;
+    }
+
+    emit(record) {
+        if (!this.stream.write(this.format(record) + '\n')) {
+            const _this = this;
+            this.stream.once('drain', function () {
+                _this.emit(record);
+            });
+        }
+    }
+}
 
 
-FileHandler.prototype.reopen = function FileHandler_reopen() {
-    this.stream = fs.createWriteStream(this.path, {'flags': 'a+'});
-};
+class FileHandler extends StreamHandler {
+    constructor(level, path) {
+        if (typeof level !== 'number' && level) {
+            path = level;
+            level = levels.NOTSET;
+        }
+        const stream = fs.createWriteStream(path, {'flags': 'a+'});
+        super(level, stream);
+    }
+
+    get path() {
+        return this.stream.path;
+    }
+
+    reopen() {
+        this.stream = fs.createWriteStream(this.path, {'flags': 'a+'});
+    }
+}
+
 
 module.exports = {
-    FileHandler: FileHandler,
-    Handler: Handler,
-    NullHandler: NullHandler,
-    StreamHandler: StreamHandler
+    FileHandler,
+    Handler,
+    NullHandler,
+    StreamHandler
 };
