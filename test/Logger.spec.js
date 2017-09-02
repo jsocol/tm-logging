@@ -6,7 +6,7 @@ const Logger = require('../src/Logger');
 
 function mockHandler () {
     return {
-        handle: sinon.spy()
+        handle: sinon.spy(),
     };
 }
 
@@ -23,7 +23,7 @@ describe('Logger', function () {
     });
 
     it('has a name', function () {
-        expect(logger.name).to.equal('');
+        expect(logger.name).to.equal('root');
     });
 
     it('takes a name argument', function () {
@@ -121,6 +121,33 @@ describe('Logger', function () {
         });
     });
 
+    describe('#removeHandler', function () {
+        beforeEach(function () {
+            logger.addHandler(handler);
+        });
+
+        it('removes a handler', function () {
+            logger.removeHandler(handler);
+            expect(logger.handlers).to.have.lengthOf(0);
+        });
+
+        it('does not remove unadded handlers', function () {
+            const newHandler = {};
+            logger.removeHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(1);
+            expect(logger.handlers[0]).to.equal(handler);
+        });
+
+        it('does not remove other handlers', function () {
+            const newHandler = {};
+            logger.addHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(2);
+            logger.removeHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(1);
+            expect(logger.handlers[0]).to.equal(handler);
+        });
+    });
+
     describe('log methods', function () {
         beforeEach(function () {
             logger.addHandler(handler);
@@ -154,7 +181,7 @@ describe('Logger', function () {
                     logger[method]('hi');
                     sinon.assert.calledOnce(handler.handle);
                     const record = handler.handle.firstCall.args[0];
-                    expect(record.lineno).to.equal('154');
+                    expect(record.lineno).to.equal('181');
                     expect(record.pathname).to.equal(__filename);
                     expect(record.func).to.equal('Context.namedTest');
                 });
@@ -278,7 +305,7 @@ describe('Logger', function () {
             const context = logger._getContext();
             expect(context.pathname).to.equal(__filename);
             // the line number of the _getContext call in this test
-            expect(context.lno).to.equal('278');
+            expect(context.lno).to.equal('305');
             // the column number of the _getContext call (after the logger.)
             expect(context.col).to.equal('36');
             // this is an anonymous test function
@@ -292,7 +319,7 @@ describe('Logger', function () {
 
         it('extracts context from a passed exception', function () {
             const context = logger._getContext(err);
-            expect(context.lno).to.equal('274');
+            expect(context.lno).to.equal('301');
             expect(context.col).to.equal('19');
             expect(context.func).to.equal('Context.namedBefore');
         });
