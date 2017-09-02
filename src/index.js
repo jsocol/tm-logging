@@ -10,7 +10,7 @@ const LogRecord = require('./LogRecord');
 process.__loggerCache = process.__loggerCache || {};
 
 
-function getLogger(name, level, propagate) {
+function getLogger(name) {
     if (!name) {
         name = 'root';
     }
@@ -20,6 +20,7 @@ function getLogger(name, level, propagate) {
     }
 
     let parent = null;
+    let propagate = true;
     if (name !== 'root') {
         if (name.indexOf('.') === -1) {
             parent = getLogger('root');
@@ -27,9 +28,11 @@ function getLogger(name, level, propagate) {
             const ancestors = name.split('.').slice(0, -1);
             parent = getLogger(ancestors.join('.'));
         }
+    } else {
+        propagate = false;
     }
 
-    process.__loggerCache[name] = new Logger(name, level, parent, propagate);
+    process.__loggerCache[name] = new Logger(name, levels.NOTSET, parent, propagate);
     return process.__loggerCache[name];
 }
 

@@ -48,24 +48,6 @@ const logging = require('tm-logging');
 const logger = logging.getLogger('my.module');
 ```
 
-`getLogger` takes two optional arguments: a `level` and a `propagate`
-boolean. `level` should be one of the following constants:
-
-```js
-logging.DEBUG
-logging.INFO
-logging.WARN === logging.WARNING
-logging.ERROR
-logging.FATAL
-```
-
-The logger will only "handle" messages at its level or higher. The
-logger's level can be changed by calling `logger.setLevel`.
-
-`propagate` controls whether the log messages will also be handled by
-ancestor loggers. See the **Hierarchical Loggers** section below for
-more details.
-
 
 ### Levels
 
@@ -110,7 +92,7 @@ const myAppLogger = logging.getLogger('myapp');
 myAppLogger.addHandler(new logging.FileHandler(null, 'myapp.log'));
 
 const myModuleLogger = logging.getLogger('myapp.mymodule');
-const myNonPropagatingLogger = logging.getLogger('myapp.noprop', null, false);
+const myNonPropagatingLogger = logging.getLogger('myapp.noprop');
 ```
 
 Messages will be "handled" by the logger they are sent to, and also any
