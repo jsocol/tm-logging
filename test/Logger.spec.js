@@ -1,13 +1,15 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const levels = require('../lib/levels');
-const Logger = require('../lib/Logger');
+const levels = require('../src/levels');
+const Logger = require('../src/Logger');
+
 
 function mockHandler () {
     return {
         handle: sinon.spy()
     };
 }
+
 
 describe('Logger', function () {
     it('should handle output', function () {

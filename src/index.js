@@ -1,10 +1,10 @@
 const util = require('util');
 const fs = require('fs');
-const formatters = require('./lib/formatters');
-const handlers = require('./lib/handlers');
-const levels = require('./lib/levels');
-const Logger = require('./lib/Logger');
-const LogRecord = require('./lib/LogRecord');
+const formatters = require('./formatters');
+const handlers = require('./handlers');
+const levels = require('./levels');
+const Logger = require('./Logger');
+const LogRecord = require('./LogRecord');
 
 
 const loggerCache = {};

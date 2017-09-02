@@ -1,9 +1,9 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const formatters = require('../lib/formatters');
-const handlers = require('../lib/handlers');
-const levels = require('../lib/levels');
-const LogRecord = require('../lib/LogRecord');
+const formatters = require('../src/formatters');
+const handlers = require('../src/handlers');
+const levels = require('../src/levels');
+const LogRecord = require('../src/LogRecord');
 
 function mockStream () {
     return {

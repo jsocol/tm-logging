@@ -1,7 +1,7 @@
 const expect = require('chai').expect;
-const formatters = require('../lib/formatters');
-const levels = require('../lib/levels');
-const LogRecord = require('../lib/LogRecord');
+const formatters = require('../src/formatters');
+const levels = require('../src/levels');
+const LogRecord = require('../src/LogRecord');
 
 describe('format helper', function () {
     it('should replace named strings', function () {
