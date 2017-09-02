@@ -6,7 +6,7 @@ function format(msg, record) {
 
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_LONG = [
     'January',
     'February',
@@ -70,39 +70,40 @@ function dateFormat(fmt, dt) {
 }
 
 
-function Formatter(fmt, datefmt) {
-    this.fmt = fmt || '%(message)s';
-    this.datefmt = datefmt || '%Y-%m-%dT%H:%M:%S';
+class Formatter {
+    constructor(fmt = '%(message)s', datefmt = '%Y-%m-%dT%H:%M:%S') {
+        this.fmt = fmt;
+        this.datefmt = datefmt;
+    }
+
+    usesTime() {
+        return (-1 !== this.fmt.indexOf('%(asctime)s'));
+    }
+
+    format(record) {
+        if (this.usesTime()) {
+            const dt = dateFormat(this.datefmt, record.created || new Date());
+            record.asctime = dt;
+        }
+        let s = format(this.fmt, record);
+        if (record.exc) {
+            s += '\n' + record.exc.stack;
+        }
+        return s;
+    }
 }
 
-
-Formatter.prototype.usesTime = function Formatter_usesTime() {
-    return (-1 !== this.fmt.indexOf('%(asctime)s'));
-};
-
-
-Formatter.prototype.format = function Formatter_format(record) {
-    if (this.usesTime()) {
-        const dt = dateFormat(this.datefmt, record.created || new Date());
-        record.asctime = dt;
-    }
-    record.message = record.getMessage();
-    let s = format(this.fmt, record);
-    if (record.exc) {
-        s += '\n' + record.exc.stack;
-    }
-    return s;
-};
 
 const _defaultFormatter = new Formatter(
     '%(asctime)s [%(levelName)s] %(process)s [%(name)s] %(message)s');
 const _standardFormatter = new Formatter(
     '%(asctime)s [%(levelName)s] %(pathname)s:%(lineno)s [%(process)s] %(message)s');
 
+
 module.exports = {
-    Formatter: Formatter,
-    _defaultFormatter: _defaultFormatter,
-    _standardFormatter: _standardFormatter,
-    format: format,
-    dateFormat: dateFormat
+    Formatter,
+    _defaultFormatter,
+    _standardFormatter,
+    format,
+    dateFormat
 };
