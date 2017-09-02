@@ -10,7 +10,7 @@ describe('format helper', function () {
         expect(formatters.format('hi %(name)s', {name: 'john'})).to.equal('hi john');
     });
 
-    it('should replace several constiables', function () {
+    it('should replace several variables', function () {
         const values = {
             name: 'john',
             foo: 'bar'
@@ -62,11 +62,11 @@ describe('Formatter', function () {
         expect(f.format(record)).to.equal('msg goes here foo');
     });
 
-    xit('should follow a format', function () {
-        const f = new formatters.Formatter('%(asctime)s [%(levelName)s] %(pathname)s:%(lineno)s [%(process)s] %(message)s');
+    it('should follow a format', function () {
+        const f = new formatters.Formatter('[%(levelName)s] %(pathname)s:%(lineno)s [%(process)s] %(message)s');
         record.created = new Date('2012-11-10T09:08:07Z');
         record.process = 401;
-        expect(f.format(record)).to.equal('2012-11-10T04:08:07 [INFO] /some/path:12 [401] msg goes here foo');
+        expect(f.format(record)).to.equal('[INFO] /some/path:12 [401] msg goes here foo');
     });
 
     it('should respect datefmt', function () {
