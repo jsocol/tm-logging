@@ -16,15 +16,15 @@ describe('getLogger', function () {
     it('should set parent loggers', function () {
         const root = logging.getLogger();
         const child = logging.getLogger('child');
-        expect(child._parent).to.equal(root);
+        expect(child.parent).to.equal(root);
     });
 
     it('should set and fill in ancestry', function () {
         const root = logging.getLogger();
         const grandchild = logging.getLogger('sister.child');
         const sister = logging.getLogger('sister');
-        expect(grandchild._parent).to.equal(sister);
-        expect(sister._parent).to.equal(root);
+        expect(grandchild.parent).to.equal(sister);
+        expect(sister.parent).to.equal(root);
     });
 
     it('should return the same child loggers', function () {

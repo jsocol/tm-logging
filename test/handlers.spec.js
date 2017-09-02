@@ -128,6 +128,24 @@ describe('Handler', function () {
     });
 });
 
+describe('NullHandler', function () {
+    let handler;
+
+    beforeEach(function () {
+        handler = new handlers.NullHandler();
+    });
+
+    it('is a Handler', function () {
+        expect(handler).to.be.an.instanceof(handlers.Handler);
+    });
+
+    describe('#emit', function () {
+        it('is implemented', function () {
+            expect(handler.emit, {}).not.to.throw;
+        });
+    });
+});
+
 describe('StreamHandler', function () {
     let handler;
     let stream;

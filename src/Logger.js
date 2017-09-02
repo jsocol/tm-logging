@@ -4,14 +4,14 @@ const LogRecord = require('./LogRecord');
 function Logger(name, level, _parent, propagate) {
     this.name = name || '';
     this.setLevel(level);
-    this._parent = _parent || null;
+    this.parent = _parent || null;
     this.propagate = typeof propagate === 'undefined' ? true : propagate;
     this.handlers = [];
 }
 
 
 Logger.prototype.setLevel = function $$Logger_setLevel(level) {
-    this.level = level || levels.NOTSET;
+    this.level = levels.checkLevel(level);
 };
 
 
@@ -78,15 +78,15 @@ Logger.prototype.exception = function $$Logger_exception () {
 Logger.prototype.fatal = function $$Logger_fatal () {
     const args = _toArray(arguments);
     const msg = args.shift();
-    this._log(levels.ERROR, msg, args);
-    process.exit(1);
+    this._log(levels.FATAL, msg, args);
 };
 
 
 Logger.prototype.log = function $$Logger_log () {
-    const level = Array.prototype.shift.call(arguments);
-    const msg = Array.prototype.shift.call(arguments);
-    this._log(level, msg, arguments);
+    const args = _toArray(arguments);
+    const level = args.shift();
+    const msg = args.shift();
+    this._log(level, msg, args);
 };
 
 
@@ -149,8 +149,8 @@ Logger.prototype.handle = function $$Logger_handle (record) {
             this.handlers[i].handle(record);
         }
     }
-    if (this._parent !== null && this.propagate) {
-        this._parent.handle(record);
+    if (this.parent !== null && this.propagate) {
+        this.parent.handle(record);
     }
 };
 
