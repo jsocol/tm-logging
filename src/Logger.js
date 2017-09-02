@@ -133,13 +133,27 @@ class Logger {
     }
 
     handle(record) {
-        if (this.isEnabledFor(record.level)) {
-            for (let i=0; i < this.handlers.length; i++) {
-                this.handlers[i].handle(record);
+        let logger = this;
+        let found = false;
+        while (logger) {
+            if (logger.isEnabledFor(record.level)) {
+                for (let i = 0; i < logger.handlers.length; i++) {
+                    const handler = logger.handlers[i];
+                    if (logger.handlers[i].isEnabledFor(record.level)) {
+                        found = true;
+                    }
+                    logger.handlers[i].handle(record);
+                }
+            }
+            if (!logger.propagate) {
+                logger = null;
+            } else {
+                logger = logger.parent;
             }
         }
-        if (this.parent !== null && this.propagate) {
-            this.parent.handle(record);
+
+        if (!found) {
+            process.stderr.write(`No handlers could be found for logger "${this.name}"\n`);
         }
     }
 }
