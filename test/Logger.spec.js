@@ -340,4 +340,45 @@ describe('Logger', function () {
             expect(logger._getContext, exc).not.to.throw;
         });
     });
+
+    describe('#hasHandlers', function () {
+        it('is false if no handlers are configured', function () {
+            expect(logger.hasHandlers()).to.be.false;
+        });
+
+        it('is true if a handler is configured', function () {
+            logger.addHandler(handler);
+            expect(logger.hasHandlers()).to.be.true;
+        });
+
+        it('is true if an ancestor has a handler', function () {
+            const child = new Logger('test', null, logger);
+            logger.addHandler(handler);
+            expect(logger.hasHandlers()).to.be.true;
+        });
+    });
+
+    describe('#getEffectiveLevel', function () {
+        it('defaults to NOTSET', function () {
+            const level = logger.getEffectiveLevel();
+            expect(level).to.equal(levels.NOTSET);
+            expect(level).to.equal(logger.level);
+        });
+
+        it('returns a configured log level', function () {
+            logger.setLevel(levels.WARN);
+            expect(logger.getEffectiveLevel()).to.equal(levels.WARN);
+        });
+
+        it('returns a child level if set', function () {
+            const child = new Logger('foo', levels.WARN, logger);
+            expect(child.getEffectiveLevel()).to.equal(levels.WARN);
+        });
+
+        it('returns an ancestor level if not set', function () {
+            const child = new Logger('foo', null, logger);
+            logger.setLevel(levels.INFO);
+            expect(child.getEffectiveLevel()).to.equal(levels.INFO);
+        });
+    });
 });

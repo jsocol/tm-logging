@@ -3,7 +3,7 @@ const LogRecord = require('./LogRecord');
 
 class Logger {
     constructor(name = 'root', level = levels.NOTSET, parent = null, propagate = true) {
-        this.name = name;
+        this.name = name || 'root';
         this.setLevel(level);
         this.parent = parent;
         this.propagate = propagate === true;
@@ -29,6 +29,28 @@ class Logger {
         if (-1 !== idx) {
             this.handlers.splice(idx, 1);
         }
+    }
+
+    hasHandlers() {
+        let logger = this;
+        while (logger) {
+            if (logger.handlers.length > 0) {
+                return true;
+            }
+            logger = logger.parent;
+        }
+        return false;
+    }
+
+    getEffectiveLevel() {
+        let logger = this;
+        while (logger) {
+            if (logger.level) {
+                return logger.level;
+            }
+            logger = logger.parent;
+        }
+        return levels.NOTSET;
     }
 
     debug() {
