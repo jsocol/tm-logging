@@ -1,11 +1,11 @@
 'use strict';
 
-var expect = require('chai').expect;
-var sinon = require('sinon');
-var formatters = require('../lib/formatters');
-var handlers = require('../lib/handlers');
-var levels = require('../lib/levels');
-var LogRecord = require('../lib/LogRecord');
+const expect = require('chai').expect;
+const sinon = require('sinon');
+const formatters = require('../lib/formatters');
+const handlers = require('../lib/handlers');
+const levels = require('../lib/levels');
+const LogRecord = require('../lib/LogRecord');
 
 function mockStream () {
     return {
@@ -14,7 +14,7 @@ function mockStream () {
 }
 
 describe('Handler', function () {
-    var h;
+    let h;
 
     beforeEach(function () {
         h = new handlers.Handler();
@@ -25,7 +25,7 @@ describe('Handler', function () {
     });
 
     it('should accept a level argument', function () {
-        var h = new handlers.Handler(levels.INFO);
+        const h = new handlers.Handler(levels.INFO);
         expect(h.level).to.equal(levels.INFO);
         h.setLevel(levels.WARNING);
         expect(h.level).to.equal(levels.WARNING);
@@ -59,10 +59,10 @@ describe('Handler', function () {
 
 describe('StreamHandler', function () {
     it('should emit to a stream', function () {
-        var stream = mockStream();
-        var sh = new handlers.StreamHandler(levels.INFO, stream);
+        const stream = mockStream();
+        const sh = new handlers.StreamHandler(levels.INFO, stream);
         sh.setFormatter(new formatters.Formatter());
-        var lr = new LogRecord('foo', levels.WARNING);
+        const lr = new LogRecord('foo', levels.WARNING);
         lr.msg = 'hi there';
         sh.handle(lr);
         expect(stream.write.callCount).to.equal(1);

@@ -1,15 +1,16 @@
 'use strict';
 
-var util = require('util');
-var fs = require('fs');
-var formatters = require('./lib/formatters');
-var handlers = require('./lib/handlers');
-var levels = require('./lib/levels');
-var Logger = require('./lib/Logger');
-var LogRecord = require('./lib/LogRecord');
+const util = require('util');
+const fs = require('fs');
+const formatters = require('./lib/formatters');
+const handlers = require('./lib/handlers');
+const levels = require('./lib/levels');
+const Logger = require('./lib/Logger');
+const LogRecord = require('./lib/LogRecord');
 
 
-var loggerCache = {};
+const loggerCache = {};
+
 
 function getLogger(name, level, propagate) {
     if (!name) {
@@ -20,21 +21,23 @@ function getLogger(name, level, propagate) {
         return loggerCache[name];
     }
 
-    var _parent = null;
+    let parent = null;
     if (name !== 'root') {
         if (name.indexOf('.') === -1) {
-            _parent = getLogger('root');
+            parent = getLogger('root');
         } else {
-            var ancestors = name.split('.').slice(0, -1);
-            _parent = getLogger(ancestors.join('.'));
+            const ancestors = name.split('.').slice(0, -1);
+            parent = getLogger(ancestors.join('.'));
         }
     }
 
-    loggerCache[name] = new Logger(name, level, _parent, propagate);
+    loggerCache[name] = new Logger(name, level, parent, propagate);
     return loggerCache[name];
 }
 
-var _rootLogger = getLogger();
+
+const _rootLogger = getLogger();
+
 
 module.exports = {
     DEBUG: levels.DEBUG,
@@ -50,10 +53,11 @@ module.exports = {
     StreamHandler: handlers.StreamHandler,
     FileHandler: handlers.FileHandler,
     NullHandler: handlers.NullHandler,
-    Logger: Logger,
-    LogRecord: LogRecord,
 
-    getLogger: getLogger,
+    Logger,
+    LogRecord,
+
+    getLogger,
 
     debug: _rootLogger.debug.bind(_rootLogger),
     info: _rootLogger.info.bind(_rootLogger),
