@@ -1,209 +1,384 @@
-'use strict';
+const expect = require('chai').expect;
+const sinon = require('sinon');
+const levels = require('../src/levels');
+const Logger = require('../src/Logger');
 
-var expect = require('chai').expect;
-var sinon = require('sinon');
-var levels = require('../lib/levels');
-var Logger = require('../lib/Logger');
 
 function mockHandler () {
     return {
-        handle: sinon.spy()
+        handle: sinon.spy(),
     };
 }
 
+
 describe('Logger', function () {
-    it('should handle output', function () {
-        var l = new Logger();
-        var h = mockHandler();
-        l.addHandler(h);
-        l.debug('hi');
-        expect(h.handle.callCount).to.equal(1);
-        var arg = h.handle.firstCall.args[0];
-        expect(arg.msg).to.equal('hi');
-        expect(arg.level).to.equal(levels.DEBUG);
+    let handler;
+    let logger;
+
+    beforeEach(function () {
+        handler = {
+            handle: sinon.stub()
+        };
+        logger = new Logger();
     });
 
-    it('should allow multiple handlers', function () {
-        var l = new Logger();
-        var h = mockHandler();
-        var g = mockHandler();
-        l.addHandler(h);
-        l.addHandler(g);
-        l.info('hi');
-        expect(h.handle.callCount).to.equal(1);
-        expect(g.handle.callCount).to.equal(1);
-        var hArg = h.handle.firstCall.args[0];
-        var gArg = g.handle.firstCall.args[0];
-        expect(gArg.msg).to.equal('hi');
-        expect(gArg.level).to.equal(levels.INFO);
-        expect(hArg.msg).to.equal('hi');
-        expect(hArg.level).to.equal(levels.INFO);
+    it('has a name', function () {
+        expect(logger.name).to.equal('root');
     });
 
-    it('should propagate to parent handlers', function () {
-        var par = new Logger('parent');
-        var ph = mockHandler();
-        par.addHandler(ph);
-        var child = new Logger('parent.child', null, par);
-        var ch = mockHandler();
-        child.addHandler(ch);
-        child.warning('oh no');
-        expect(ph.handle.callCount).to.equal(1);
-        expect(ch.handle.callCount).to.equal(1);
-        var pArg = ph.handle.firstCall.args[0];
-        var cArg = ch.handle.firstCall.args[0];
-        expect(pArg.name).to.equal('parent.child');
-        expect(cArg.name).to.equal('parent.child');
+    it('takes a name argument', function () {
+        const logger = new Logger('foo');
+        expect(logger.name).to.equal('foo');
     });
 
-    it('should skip handling below-level records', function () {
-        var l = new Logger('foo', levels.WARNING);
-        var h = mockHandler();
-        l.addHandler(h);
-
-        l.debug('foo');
-        expect(h.handle.callCount).to.equal(0);
+    it('has a level', function () {
+        expect(logger.level).to.equal(levels.NOTSET);
     });
 
-    it('should handle at-level records', function () {
-        var l = new Logger('foo', levels.WARNING);
-        var h = mockHandler();
-        l.addHandler(h);
-
-        l.warning('foo');
-        expect(h.handle.callCount).to.equal(1);
+    it('takes a level argument', function () {
+        const logger = new Logger('foo', levels.WARN);
+        expect(logger.level).to.equal(levels.WARN);
     });
 
-    it('should propagate too-low records', function () {
-        var par = new Logger('parent');
-        var ph = mockHandler();
-        par.addHandler(ph);
-        var child = new Logger('parent.child', levels.ERROR, par);
-        var ch = mockHandler();
-        child.addHandler(ch);
-        child.info('bar');
-        expect(ph.handle.callCount).to.equal(1);
-        expect(ch.handle.callCount).to.equal(0);
+    it('has no parent by default', function () {
+        expect(logger.parent).to.be.null;
     });
 
-    it('should fall back if context cannot be found', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
-        var exc = new Error();
-        exc.stack = '';
-        l.exception(exc, 'Foo');
-        expect(h.handle.callCount).to.equal(1);
-
-        var record = h.handle.firstCall.args[0];
-        expect(record.func).to.equal('');
-        expect(record.pathname).to.equal('');
-        expect(record.lineno).to.equal('');
+    it('takes a parent argument', function () {
+        const child = new Logger('foo', levels.INFO, logger);
+        expect(child.parent).to.equal(logger);
     });
 
-    it('should ignore unparseable frames', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
-        var exc = new Error();
-        exc.stack = 'nothinghere\norhere\n' + exc.stack;
-        l.exception(exc, 'Foo');
-        expect(h.handle.callCount).to.equal(1);
-
-        var record = h.handle.firstCall.args[0];
+    it('is set to propagate by default', function () {
+        expect(logger.propagate).to.be.true;
     });
 
-    it('should have a debug method', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
-
-        l.debug('must die');
-        expect(h.handle.callCount).to.equal(1);
-
-        var record = h.handle.firstCall.args[0];
-        expect(record.level).to.equal(levels.DEBUG);
+    it('can disable propagation', function () {
+        const logger = new Logger('foo', levels.INFO, null, false);
+        expect(logger.propagate).to.be.false;
     });
 
-    it('should have an info method', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
-
-        l.info('must die');
-        expect(h.handle.callCount).to.equal(1);
-
-        var record = h.handle.firstCall.args[0];
-        expect(record.level).to.equal(levels.INFO);
+    it('has no handlers by default', function () {
+        expect(logger.handlers).to.be.an.instanceof(Array);
+        expect(logger.handlers).to.deep.equal([]);
     });
 
-    it('should have an warn/warning method', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
+    describe('#setLevel', function () {
+        it('sets the level', function () {
+            logger.setLevel(levels.WARN);
+            expect(logger.level).to.equal(levels.WARN);
+        });
 
-        l.warn('must die');
-        l.warning('will die');
-        expect(h.handle.callCount).to.equal(2);
+        it('defaults to NOTSET with invalid levels', function () {
+            const logger = new Logger('foo', levels.INFO);
+            logger.setLevel(-9);
+            expect(logger.level).to.equal(levels.NOTSET);
+        });
 
-        var record1 = h.handle.firstCall.args[0];
-        expect(record1.level).to.equal(levels.WARNING);
-
-        var record2 = h.handle.secondCall.args[0];
-        expect(record2.level).to.equal(levels.WARNING);
+        it('defaults to NOTSET with no level', function () {
+            const logger = new Logger('foo', levels.INFO);
+            logger.setLevel();
+            expect(logger.level).to.equal(levels.NOTSET);
+        });
     });
 
-    it('should have an error method', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
+    describe('#isEnabledFor', function () {
+        it('is enabled for the current level', function () {
+            logger.setLevel(levels.INFO);
+            expect(logger.isEnabledFor(levels.INFO)).to.be.true;
+        });
 
-        l.error('must die');
-        expect(h.handle.callCount).to.equal(1);
+        it('is enabled for higher levels', function () {
+            logger.setLevel(levels.DEBUG);
+            expect(logger.isEnabledFor(levels.WARN)).to.be.true;
+        });
 
-        var record = h.handle.firstCall.args[0];
-        expect(record.level).to.equal(levels.ERROR);
+        it('is disabled for lower levels', function () {
+            logger.setLevel(levels.ERROR);
+            expect(logger.isEnabledFor(levels.INFO)).to.be.false;
+        });
     });
 
-    it('should have an exception method', function () {
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
-        var exc = new Error();
+    describe('#addHandler', function () {
+        it('adds a handler', function () {
+            logger.addHandler(handler);
+            expect(logger.handlers).to.have.lengthOf(1);
+            expect(logger.handlers[0]).to.equal(handler);
+        });
 
-        l.exception(exc, 'must die');
-        expect(h.handle.callCount).to.equal(1);
+        it('does not add the same handler twice', function () {
+            logger.addHandler(handler);
+            logger.addHandler(handler);
+            expect(logger.handlers).to.have.lengthOf(1);
+        });
 
-        var record = h.handle.firstCall.args[0];
-        expect(record.level).to.equal(levels.ERROR);
-        expect(record.exc).to.equal(exc);
+        it('adds distinct handlers', function () {
+            const newHandler = {};
+            logger.addHandler(handler);
+            logger.addHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(2);
+            expect(logger.handlers[1]).to.equal(newHandler);
+        });
     });
 
-    it('should exit on fatal error', function () {
-        var stub = sinon.stub(process, 'exit');
+    describe('#removeHandler', function () {
+        beforeEach(function () {
+            logger.addHandler(handler);
+        });
 
-        var l = new Logger('foo');
-        var h = mockHandler();
-        l.addHandler(h);
+        it('removes a handler', function () {
+            logger.removeHandler(handler);
+            expect(logger.handlers).to.have.lengthOf(0);
+        });
 
-        l.fatal('must die');
-        expect(h.handle.callCount).to.equal(1);
-        expect(stub.callCount).to.equal(1);
+        it('does not remove unadded handlers', function () {
+            const newHandler = {};
+            logger.removeHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(1);
+            expect(logger.handlers[0]).to.equal(handler);
+        });
 
-        var record = h.handle.firstCall.args[0];
-        expect(record.level).to.equal(levels.ERROR);
-        stub.restore();
+        it('does not remove other handlers', function () {
+            const newHandler = {};
+            logger.addHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(2);
+            logger.removeHandler(newHandler);
+            expect(logger.handlers).to.have.lengthOf(1);
+            expect(logger.handlers[0]).to.equal(handler);
+        });
     });
 
-    it('should have a log method', function () {
-        var l = new Logger('foo', levels.WARNING);
-        var h = mockHandler();
-        l.addHandler(h);
+    describe('log methods', function () {
+        beforeEach(function () {
+            logger.addHandler(handler);
+        });
 
-        l.log(levels.WARN, 'foo');
-        expect(h.handle.callCount).to.equal(1);
+        ['debug', 'info', 'warn', 'warning', 'error', 'fatal'].forEach(function (method) {
+            describe('#' + method, function () {
+                let levelName;
 
-        var record = h.handle.firstCall.args[0];
-        expect(record.level).to.equal(levels.WARN);
+                before(function () {
+                    levelName = method.toUpperCase();
+                });
+
+                it('creates a LogRecord with level ' + method.toUpperCase(), function () {
+                    logger[method]('hi there');
+                    sinon.assert.calledOnce(handler.handle);
+                    const record = handler.handle.firstCall.args[0];
+                    const level = levels[levelName];
+                    expect(record.level).to.equal(level);
+                    expect(record.levelName).to.equal(levels.getLevelName(level));
+                });
+
+                it('formats in additional arguments', function () {
+                    logger[method]('hi %s', 'friend');
+                    sinon.assert.calledOnce(handler.handle);
+                    const record = handler.handle.firstCall.args[0];
+                    expect(record.message).to.equal('hi friend');
+                });
+
+                it('includes callsite context', function namedTest() {
+                    logger[method]('hi');
+                    sinon.assert.calledOnce(handler.handle);
+                    const record = handler.handle.firstCall.args[0];
+                    expect(record.lineno).to.equal('181');
+                    expect(record.pathname).to.equal(__filename);
+                    expect(record.func).to.equal('Context.namedTest');
+                });
+            });
+        });
+
+        describe('#exception', function () {
+            it('accepts an exception parameter', function () {
+                const err = new Error('waddup');
+                logger.exception(err, 'oh no');
+                sinon.assert.calledOnce(handler.handle);
+                const record = handler.handle.firstCall.args[0];
+                expect(record.exc).to.equal(err);
+                expect(record.message).to.equal('oh no');
+            });
+
+            it('creates a LogRecord with level ERROR', function () {
+                const err = new Error('waddup');
+                logger.exception(err, 'oh no');
+                sinon.assert.calledOnce(handler.handle);
+                const record = handler.handle.firstCall.args[0];
+                expect(record.level).to.equal(levels.ERROR);
+            });
+
+            it('formats in additional arguments', function () {
+                const err = new Error('waddup');
+                logger.exception(err, 'hi %s', 'friend');
+                sinon.assert.calledOnce(handler.handle);
+                const record = handler.handle.firstCall.args[0];
+                expect(record.message).to.equal('hi friend');
+            });
+        });
+
+        describe('#log', function () {
+            it('takes a level argument', function () {
+                logger.log(levels.WARN, 'uh oh');
+                sinon.assert.calledOnce(handler.handle);
+                const record = handler.handle.firstCall.args[0];
+                expect(record.level).to.equal(levels.WARN);
+                expect(record.message).to.equal('uh oh');
+            });
+
+            it('formats in additional arguments', function () {
+                logger.exception(levels.INFO, 'hi %s', 'friend');
+                sinon.assert.calledOnce(handler.handle);
+                const record = handler.handle.firstCall.args[0];
+                expect(record.message).to.equal('hi friend');
+            });
+        });
+    });
+
+    describe('#handle', function () {
+        it('calls handle on multiple handlers', function () {
+            const handler2 = mockHandler();
+            logger.addHandler(handler);
+            logger.addHandler(handler2);
+            logger.info('hi');
+            sinon.assert.calledOnce(handler.handle);
+            sinon.assert.calledOnce(handler2.handle);
+            const record = handler.handle.firstCall.args[0];
+            const record2 = handler2.handle.firstCall.args[0];
+            expect(record.msg).to.equal('hi');
+            expect(record.level).to.equal(levels.INFO);
+            expect(record2.msg).to.equal('hi');
+            expect(record2.level).to.equal(levels.INFO);
+        });
+
+        it('propagates to parent handlers', function () {
+            const par = new Logger('parent');
+            const ph = mockHandler();
+            par.addHandler(ph);
+            const child = new Logger('parent.child', null, par);
+            const ch = mockHandler();
+            child.addHandler(ch);
+            child.warning('oh no');
+            sinon.assert.calledOnce(ph.handle);
+            sinon.assert.calledOnce(ch.handle);
+            const pArg = ph.handle.firstCall.args[0];
+            const cArg = ch.handle.firstCall.args[0];
+            expect(pArg.name).to.equal('parent.child');
+            expect(cArg.name).to.equal('parent.child');
+        });
+
+        it('skips handling below-level records', function () {
+            const logger = new Logger('foo', levels.WARNING);
+            logger.addHandler(handler);
+
+            logger.debug('foo');
+            sinon.assert.notCalled(handler.handle);
+        });
+
+        it('handles at-level records', function () {
+            const logger = new Logger('foo', levels.WARNING);
+            logger.addHandler(handler);
+
+            logger.warning('foo');
+            sinon.assert.calledOnce(handler.handle);
+        });
+
+        it('propagates too-low records', function () {
+            const par = new Logger('parent');
+            const ph = mockHandler();
+            par.addHandler(ph);
+            const child = new Logger('parent.child', levels.ERROR, par);
+            const ch = mockHandler();
+            child.addHandler(ch);
+            child.info('bar');
+            sinon.assert.calledOnce(ph.handle);
+            sinon.assert.notCalled(ch.handle);
+        });
+    });
+
+    describe('#_getContext', function () {
+        let err;
+
+        before(function namedBefore() {
+            err = new Error('whoa');
+        });
+
+        it('gets the current callsite context', function () {
+            const context = logger._getContext();
+            expect(context.pathname).to.equal(__filename);
+            // the line number of the _getContext call in this test
+            expect(context.lno).to.equal('305');
+            // the column number of the _getContext call (after the logger.)
+            expect(context.col).to.equal('36');
+            // this is an anonymous test function
+            expect(context.func).to.equal('Context.<anonymous>');
+        });
+
+        it('gets function names for callers', function namedTest() {
+            const context = logger._getContext();
+            expect(context.func).to.equal('Context.namedTest');
+        });
+
+        it('extracts context from a passed exception', function () {
+            const context = logger._getContext(err);
+            expect(context.lno).to.equal('301');
+            expect(context.col).to.equal('19');
+            expect(context.func).to.equal('Context.namedBefore');
+        });
+
+        it('falls back if context cannot be found', function () {
+            const exc = new Error();
+            exc.stack = '';
+            const context = logger._getContext(exc);
+            expect(context.func).to.equal('');
+            expect(context.pathname).to.equal('');
+            expect(context.lno).to.equal('');
+            expect(context.col).to.equal('');
+        });
+
+        it('should ignore unparseable frames', function () {
+            const exc = new Error();
+            exc.stack = 'nothinghere\norhere\n' + exc.stack;
+            expect(logger._getContext, exc).not.to.throw;
+        });
+    });
+
+    describe('#hasHandlers', function () {
+        it('is false if no handlers are configured', function () {
+            expect(logger.hasHandlers()).to.be.false;
+        });
+
+        it('is true if a handler is configured', function () {
+            logger.addHandler(handler);
+            expect(logger.hasHandlers()).to.be.true;
+        });
+
+        it('is true if an ancestor has a handler', function () {
+            const child = new Logger('test', null, logger);
+            logger.addHandler(handler);
+            expect(logger.hasHandlers()).to.be.true;
+        });
+    });
+
+    describe('#getEffectiveLevel', function () {
+        it('defaults to NOTSET', function () {
+            const level = logger.getEffectiveLevel();
+            expect(level).to.equal(levels.NOTSET);
+            expect(level).to.equal(logger.level);
+        });
+
+        it('returns a configured log level', function () {
+            logger.setLevel(levels.WARN);
+            expect(logger.getEffectiveLevel()).to.equal(levels.WARN);
+        });
+
+        it('returns a child level if set', function () {
+            const child = new Logger('foo', levels.WARN, logger);
+            expect(child.getEffectiveLevel()).to.equal(levels.WARN);
+        });
+
+        it('returns an ancestor level if not set', function () {
+            const child = new Logger('foo', null, logger);
+            logger.setLevel(levels.INFO);
+            expect(child.getEffectiveLevel()).to.equal(levels.INFO);
+        });
     });
 });
