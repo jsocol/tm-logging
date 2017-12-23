@@ -39,26 +39,25 @@ function pad(n) {
 
 
 function dateRecord(dt) {
-    const w = dt.getDay();
-    const m = dt.getMonth();
-    const H = dt.getHours();
-    const M = dt.getMinutes();
-    const S = dt.getSeconds();
-    const z = dt.getTimezoneOffset();
+    const w = dt.getUTCDay();
+    const m = dt.getUTCMonth();
+    const H = dt.getUTCHours();
+    const M = dt.getUTCMinutes();
+    const S = dt.getUTCSeconds();
     return {
         'a': DAY_SHORT[w],
         'A': DAY_LONG[w],
         'b': MONTH_SHORT[m],
         'B': MONTH_LONG[m],
-        'd': pad(dt.getDate()),
+        'd': pad(dt.getUTC()Date()),
         'H': pad(H),
         'm': pad(m + 1),
         'M': pad(M),
         'p': (H > 11) ? 'PM' : 'AM',
         'S': pad(S),
-        'w': dt.getDay(),
-        'Y': dt.getFullYear(),
-        'z': ((z < 0) ? '-' : '') + pad(~~(Math.abs(z) / 60)) + pad(Math.abs(z) % 60),
+        'w': dt.getUTCDay(),
+        'Y': dt.getUTCFullYear(),
+        'z': 'Z',
         '%': '%'
     };
 }
